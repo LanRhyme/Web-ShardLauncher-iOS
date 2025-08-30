@@ -1,24 +1,20 @@
 [
   {
     "markdownFile": "content/note1.md",
-    "spanFullWidth": true
+    "spanFullWidth": true,
+    "showJumpButton": true,
+    "jumpLink": "https://github.com/LanRhyme/ShardLauncher-iOS"
   },
   {
     "markdownFile": "content/note2.md",
     "spanFullWidth": false,
     "expandable": true,
-    "truncateHeight": 250
+    "truncateHeight": 300,
+    "showJumpButton": true,
+    "jumpLink": "https://zh.minecraft.wiki/w/Java%E7%89%881.21.9"
   },
   {
     "markdownFile": "content/note3.md",
-    "spanFullWidth": false
-  },
-  {
-    "markdownFile": "content/code-example.md",
-    "spanFullWidth": false
-  },
-  {
-    "markdownFile": "content/table-example.md",
     "spanFullWidth": false
   }
 ]

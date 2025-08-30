@@ -264,8 +264,15 @@
             opacity: 0;
         }
 
-        .expand-btn {
+        .card-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
             margin-top: 1rem;
+            align-self: flex-start;
+        }
+
+        .expand-btn, .jump-btn {
             padding: 0.5rem 1rem;
             background-color: var(--card-border);
             border: none;
@@ -273,13 +280,15 @@
             cursor: pointer;
             font-weight: 500;
             color: var(--text-primary);
-            align-self: flex-start;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        .expand-btn:hover {
+        .expand-btn:hover, .jump-btn:hover {
             background-color: var(--amethyst-color);
             color: #fff;
+            text-decoration: none;
         }
 
         /* --- 响应式设计 --- */
@@ -537,7 +546,10 @@
                             cardElement.classList.add('has-title-first');
                         }
 
-                        // --- 新增：处理展开/折叠功能 ---
+                        // --- 新增：处理按钮（展开/折叠、跳转） ---
+                        const buttonContainer = document.createElement('div');
+                        buttonContainer.className = 'card-buttons';
+
                         if (cardConfig.expandable && cardConfig.truncateHeight > 0) {
                             cardElement.classList.add('is-collapsible');
                             contentWrapper.style.maxHeight = `${cardConfig.truncateHeight}px`;
@@ -545,7 +557,7 @@
                             const expandButton = document.createElement('button');
                             expandButton.className = 'expand-btn';
                             expandButton.textContent = '展开阅读';
-                            cardElement.appendChild(expandButton);
+                            buttonContainer.appendChild(expandButton);
 
                             expandButton.addEventListener('click', () => {
                                 const isExpanded = cardElement.classList.toggle('is-expanded');
@@ -574,6 +586,20 @@
                                     }
                                 }
                             });
+                        }
+
+                        if (cardConfig.showJumpButton && cardConfig.jumpLink) {
+                            const jumpButton = document.createElement('a');
+                            jumpButton.className = 'jump-btn';
+                            jumpButton.href = cardConfig.jumpLink;
+                            jumpButton.textContent = '跳转';
+                            jumpButton.target = '_blank';
+                            jumpButton.rel = 'noopener noreferrer';
+                            buttonContainer.appendChild(jumpButton);
+                        }
+
+                        if (buttonContainer.hasChildNodes()) {
+                            cardElement.appendChild(buttonContainer);
                         }
 
                         cardsContainer.appendChild(cardElement);
