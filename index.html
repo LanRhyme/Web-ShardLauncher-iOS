@@ -468,15 +468,7 @@
                 for (const cardConfig of cardsConfig) {
                     try {
                         const mdResponse = await fetch(cardConfig.markdownFile);
-                        let markdownText = await mdResponse.text();
-
-                        // Pre-process wiki syntax before rendering
-                        markdownText = markdownText
-                            .replace(/'''(.*?)'''/g, '**$1**')
-                            .replace(/\[\[(?:[^\]|]+\|)?([^\]]+)\]\]/g, '$1')
-                            .replace(/\{\{(?:[^|}]+\|)?([^}]+)\}\} /g, '`$1`')
-                            .replace(/<ref>.*?<\/ref>/g, '')
-                            .replace(/^;\s*(.*)/gm, '**$1**');
+                        const markdownText = await mdResponse.text();
 
                         const cardHtml = markdownConverter.makeHtml(markdownText);
                         const cardElement = document.createElement('div');
