@@ -1,0 +1,24 @@
+[
+  {
+    "markdownFile": "content/note1.md",
+    "spanFullWidth": true
+  },
+  {
+    "markdownFile": "content/note2.md",
+    "spanFullWidth": false,
+    "expandable": true,
+    "truncateHeight": 250
+  },
+  {
+    "markdownFile": "content/note3.md",
+    "spanFullWidth": false
+  },
+  {
+    "markdownFile": "content/code-example.md",
+    "spanFullWidth": false
+  },
+  {
+    "markdownFile": "content/table-example.md",
+    "spanFullWidth": false
+  }
+]

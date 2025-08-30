@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>笔记 - LanRhyme的个人网站</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+
+    <style>
+        /* --- 核心CSS变量 --- */
+        :root {
+            --bg-primary: #f8f9fa;
+            --text-primary: #212529;
+            --card-bg: #ffffff;
+            --card-border: #e9ecef;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --amethyst-color: #28a745;
+            --amethyst-color-hover: #218838;
+            --blob-gradient-start: rgba(40, 167, 69, 0.2);
+            --blob-gradient-end: rgba(33, 136, 56, 0.2);
+            --theme-toggle-icon-color: #495057;
+        }
+
+        .dark-mode {
+            --bg-primary: #121212;
+            --text-primary: #e9ecef;
+            --card-bg: #1e1e1e;
+            --card-border: #343a40;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            --amethyst-color: #3ddc84;
+            --amethyst-color-hover: #35c474;
+            --blob-gradient-start: rgba(61, 220, 132, 0.1);
+            --blob-gradient-end: rgba(53, 196, 116, 0.1);
+            --theme-toggle-icon-color: #adb5bd;
+        }
+
+        /* --- 基础和动画样式 --- */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .solid-card {
+            background-color: var(--card-bg);
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .anim-fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        }
+
+        .anim-fade-in-up.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity .3s ease-in-out;
+            opacity: 1
+        }
+
+        #page-loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .content-container {
+            opacity: 0;
+            transition: opacity 1s ease-in
+        }
+
+        body.content-loaded {
+            opacity: 1
+        }
+
+        .mc-bg-container {
+            position: fixed;
+            z-index: -2;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background-position: center;
+            background-size: cover;
+            transition: background-image 0.3s ease;
+        }
+
+        .blob {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, var(--blob-gradient-start) 0%, var(--blob-gradient-end) 100%);
+            filter: blur(60px);
+            border-radius: 50%;
+            z-index: -1;
+            animation: blob-movement 15s infinite linear;
+        }
+
+        @keyframes blob-movement {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(5%, -10%) scale(1.3);
+            }
+
+            66% {
+                transform: translate(-15%, 5%) scale(0.9);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        /* --- 布局和卡片样式 --- */
+        #theme-toggle-fixed {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            transition: all .3s ease;
+            border-radius: 50%;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+        }
+
+        #theme-toggle-fixed:hover {
+            transform: scale(1.1) rotate(15deg)
+        }
+
+        #theme-toggle-fixed i {
+            color: var(--theme-toggle-icon-color);
+            font-size: 1.25rem
+        }
+
+        .cards-grid {
+            column-count: 2;
+            column-gap: 2.5rem;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem 6.25rem;
+            box-sizing: border-box;
+            transition: column-count 0.5s ease-in-out;
+        }
+
+        .note-card {
+            break-inside: avoid;
+            margin-bottom: 2.5rem;
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            transition: opacity 0.5s ease;
+        }
+
+        /* --- 修正：当卡片以标题开头时，增加内容上边距 --- */
+        .note-card.has-title-first .markdown-content {
+            padding-top: 1.5rem;
+        }
+
+        .note-card.full-width {
+            column-span: all;
+        }
+
+        /* --- 新增：展开/折叠功能的核心样式 --- */
+        .cards-grid.single-column-mode {
+            column-count: 1;
+        }
+
+        .cards-grid.single-column-mode .note-card:not(.is-expanded) {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .note-card.is-collapsible .markdown-content {
+            position: relative;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+
+        .note-card.is-collapsible .markdown-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            /* 移除渐变背景 */
+            background: transparent;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .note-card.is-expanded .markdown-content {
+            max-height: none !important;
+            /* !important 确保覆盖行内样式 */
+        }
+
+        .note-card.is-expanded .markdown-content::after {
+            opacity: 0;
+        }
+
+        .expand-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: var(--card-border);
+            border: none;
+            border-radius: 99px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-primary);
+            align-self: flex-start;
+            transition: background-color 0.3s ease;
+        }
+
+        .expand-btn:hover {
+            background-color: var(--amethyst-color);
+            color: #fff;
+        }
+
+        /* --- 响应式设计 --- */
+        @media (max-width: 1024px) {
+            .cards-grid {
+                padding: 2rem 3rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                column-count: 1;
+                padding: 1rem;
+            }
+
+            #theme-toggle-fixed {
+                top: 16px;
+                right: 16px;
+            }
+
+            .note-card {
+                padding: 1.5rem;
+            }
+        }
+
+        /* --- Markdown 内容样式 (与之前相同) --- */
+        .markdown-content {
+            font-size: 1.1rem;
+            line-height: 1.8
+        }
+
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4 {
+            font-weight: 700;
+            margin-top: 1.5em;
+            margin-bottom: .75em;
+            line-height: 1.3
+        }
+
+        .markdown-content h1:first-child,
+        .markdown-content h2:first-child,
+        .markdown-content h3:first-child,
+        .markdown-content h4:first-child {
+            margin-top: 0
+        }
+
+        .markdown-content h1 {
+            font-size: 2.4em;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: .3em
+        }
+
+        .markdown-content h2 {
+            font-size: 1.8em;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: .3em
+        }
+
+        .markdown-content h3 {
+            font-size: 1.4em
+        }
+
+        .markdown-content h4 {
+            font-size: 1.1em
+        }
+
+        .markdown-content p {
+            margin-bottom: 1.25em
+        }
+
+        .markdown-content a {
+            color: var(--amethyst-color);
+            text-decoration: none;
+            font-weight: 500
+        }
+
+        .markdown-content a:hover {
+            text-decoration: underline;
+            color: var(--amethyst-color-hover)
+        }
+
+        .markdown-content ul,
+        .markdown-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1.25em
+        }
+
+        .markdown-content li {
+            margin-bottom: .5em
+        }
+
+        .markdown-content ul li::marker {
+            color: var(--amethyst-color)
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid var(--amethyst-color);
+            padding-left: 1.5rem;
+            margin: 1.5em 0;
+            font-style: italic;
+            opacity: .9
+        }
+
+        .markdown-content code {
+            background-color: var(--card-border);
+            color: var(--amethyst-color);
+            padding: .2em .5em;
+            border-radius: 6px;
+            font-size: 95%;
+            font-family: monospace
+        }
+
+        .markdown-content pre {
+            background-color: var(--card-border);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 1.25em
+        }
+
+        .markdown-content pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit
+        }
+
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5em
+        }
+
+        .markdown-content th,
+        .markdown-content td {
+            border: 1px solid var(--card-border);
+            padding: .75em 1em;
+            text-align: left
+        }
+
+        .markdown-content thead {
+            background-color: var(--card-border);
+            font-weight: 600
+        }
+
+        .markdown-content hr {
+            border: none;
+            border-top: 2px solid var(--card-border);
+            margin: 2em 0
+        }
+    </style>
+</head>
+
+<body class="content-container">
+<div id="page-loader"></div>
+<div id="theme-toggle-fixed"><i class="fa fa-sun"></i></div>
+
+<div class="mc-bg-container"></div>
+<div class="blob" style="top: 10%; left: 5%;"></div>
+<div class="blob" style="top: 70%; right: 10%; transform: scale(0.8);"></div>
+
+<main class="cards-grid" id="cards-container"></main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const themeToggle = document.getElementById('theme-toggle-fixed');
+        const themeIcon = themeToggle.querySelector('i');
+        let savedTheme = localStorage.getItem('theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+        const applyTheme = (theme) => {
+            document.documentElement.classList.toggle('dark-mode', theme === 'dark');
+            themeIcon.className = theme === 'dark' ? 'fa fa-moon' : 'fa fa-sun';
+        };
+        applyTheme(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const newTheme = document.documentElement.classList.contains('dark-mode') ? 'light' : 'dark';
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+        });
+
+        const pageLoader = document.getElementById('page-loader');
+        window.addEventListener('load', () => {
+            pageLoader?.classList.add('hidden');
+            document.body.classList.add('content-loaded');
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        const cardsContainer = document.getElementById('cards-container');
+        const markdownConverter = new showdown.Converter({
+            tables: true,
+            strikethrough: true,
+            tasklists: true
+        });
+
+        async function loadAndRenderCards() {
+            try {
+                const response = await fetch('cards.json');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const cardsConfig = await response.json();
+
+                for (const cardConfig of cardsConfig) {
+                    try {
+                        const mdResponse = await fetch(cardConfig.markdownFile);
+                        let markdownText = await mdResponse.text();
+
+                        // Pre-process wiki syntax before rendering
+                        markdownText = markdownText
+                            .replace(/'''(.*?)'''/g, '**$1**')
+                            .replace(/\[\[(?:[^\]|]+\|)?([^\]]+)\]\]/g, '$1')
+                            .replace(/\{\{(?:[^|}]+\|)?([^}]+)\}\} /g, '`$1`')
+                            .replace(/<ref>.*?<\/ref>/g, '')
+                            .replace(/^;\s*(.*)/gm, '**$1**');
+
+                        const cardHtml = markdownConverter.makeHtml(markdownText);
+                        const cardElement = document.createElement('div');
+                        cardElement.className = 'note-card solid-card anim-fade-in-up';
+                        if (cardConfig.spanFullWidth) cardElement.classList.add('full-width');
+
+                        const contentWrapper = document.createElement('div');
+                        contentWrapper.className = 'markdown-content';
+                        contentWrapper.innerHTML = cardHtml;
+                        cardElement.appendChild(contentWrapper);
+
+                        // --- 新增：检查第一个元素是否为标题 ---
+                        const firstChild = contentWrapper.firstElementChild;
+                        if (firstChild && ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(firstChild.tagName)) {
+                            cardElement.classList.add('has-title-first');
+                        }
+
+                        // --- 新增：处理展开/折叠功能 ---
+                        if (cardConfig.expandable && cardConfig.truncateHeight > 0) {
+                            cardElement.classList.add('is-collapsible');
+                            contentWrapper.style.maxHeight = `${cardConfig.truncateHeight}px`;
+
+                            const expandButton = document.createElement('button');
+                            expandButton.className = 'expand-btn';
+                            expandButton.textContent = '展开阅读';
+                            cardElement.appendChild(expandButton);
+
+                            expandButton.addEventListener('click', () => {
+                                const isExpanded = cardElement.classList.toggle('is-expanded');
+                                cardsContainer.classList.toggle('single-column-mode', isExpanded);
+                                expandButton.textContent = isExpanded ? '收起' : '展开阅读';
+
+                                if (isExpanded) {
+                                    // 展开时，滚动到卡片顶部
+                                    setTimeout(() => {
+                                        const headerOffset = 20;
+                                        const elementPosition = cardElement.getBoundingClientRect().top;
+                                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                                        window.scrollTo({
+                                            top: offsetPosition,
+                                            behavior: 'smooth'
+                                        });
+                                    }, 300); // 延迟以获得更平滑的体验
+                                } else {
+                                    // 折叠时，如果卡片在视窗外，则滚动回去
+                                    const rect = cardElement.getBoundingClientRect();
+                                    if (rect.top < 0 || rect.bottom > window.innerHeight) {
+                                        cardElement.scrollIntoView({
+                                            behavior: 'smooth',
+                                            block: 'center'
+                                        });
+                                    }
+                                }
+                            });
+                        }
+
+                        cardsContainer.appendChild(cardElement);
+                        observer.observe(cardElement);
+
+                    } catch (mdError) {
+                        console.error(`Error processing card ${cardConfig.markdownFile}:`, mdError);
+                    }
+                }
+            } catch (error) {
+                console.error('Could not load cards configuration:', error);
+            }
+        }
+
+        loadAndRenderCards();
+    });
+</script>
+
+</body>
+
+</html>
